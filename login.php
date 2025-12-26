@@ -76,15 +76,67 @@ $msg = $_GET['msg'] ?? null;
             padding-left: 0 !important;
         }
     }
-    @media (max-width: 480px) {
+    .college-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        padding: 20px;
+        z-index: 1000;
+    }
+    .college-name {
+        color: rgb(255, 255, 255);
+        font-weight: bold;
+        text-align: center;
+        margin: 0;
+        font-size: 3.5rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .logo {
+        z-index: 1001;
+        flex-shrink: 0;
+    }
+    .page-header.login-page {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding-top: 0 !important;
+    }
+    .page-header.login-page .container {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    @media (max-width: 768px) {
         .college-name {
-            font-size: 15px;
-            z-index: 2;
+            font-size: 1.5rem;
+            white-space: normal;
         }
         .logo {
-            height: 80px !important;
-            width: 80px !important;
-            z-index: 2 !important;
+            height: 100px !important;
+            width: 100px !important;
+        }
+    }
+    @media (max-width: 480px) {
+        .college-header {
+            padding: 15px 10px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .college-name {
+            font-size: 1rem;
+            white-space: normal;
+        }
+        .logo {
+            height: 70px !important;
+            width: 70px !important;
         }
     }
     @supports (-webkit-overflow-scrolling: touch) {
@@ -99,14 +151,15 @@ $msg = $_GET['msg'] ?? null;
 </style>
 <body class="off-canvas-sidebar">
 
+<div class="college-header">
+    <img src="assets/img/logo.png" class="img-fluid logo" style="height:120px; width:120px;">
+    <h1 class="college-name">Guru Nanak Dev Engineering College</h1>
+</div>
+
 <div class="wrapper wrapper-full-page">
     <div class="page-header login-page header-filter" filter-color="black" style="background-image: url('assets/img/login.jpg'); background-size: cover; background-position: top center;">
-      <div style="display: flex;z-index:2; align-items: center; justify-content: center; gap: 20px; margin-bottom: 1rem;">
-        <img src="assets/img/logo.png" class="img-fluid logo" style="height:120px; width:120px; filter: drop-shadow(0 0 10px #ffffffff) contrast(1.2); opacity: 1;">
-      <h1 class="college-name" style="color: black; font-weight: bold; text-align: center; text-shadow: 2px 2px 6px rgba(0,0,0,0.7); margin-bottom: 1rem;">Guru Nanak Dev Engineering College</h1>
-      </div>
         <div class="container">
-            <div class="col-lg-4 col-md-6 col-sm-6 ml-auto mr-auto">
+            <div class="col-lg-4 col-md-6 col-sm-6 ml-auto mr-auto" style="margin-top: 0;">
                 <form class="form" method="POST" action="login_verify.php">
                     <div class="card card-login">
                         <div class="card-header card-header-rose text-center">
