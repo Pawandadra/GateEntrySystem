@@ -1,5 +1,5 @@
 
-<footer class="footer">
+<!-- <footer class="footer">
   <div class="container-fluid">
     <nav class="float-left">
       <ul>
@@ -13,7 +13,7 @@
       <a href="https://omkar2403.github.io/its_me/" target="_blank">Omkar Kakeru</a> for a better web.
     </div>
   </div>
-</footer>               
+</footer> -->
 </div>          
 </div>
 

@@ -1,5 +1,15 @@
 <?php
 	session_start();
+
+	// Redirect to dash.php if logged in and not on dash.php already
+	if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'User') {
+    		// Check if the user is already on index.php, if so redirect to dash.php
+    		if ($_SERVER['REQUEST_URI'] !== '/inout/dash.php') {
+        		header("Location: dash.php");
+        		exit();
+    		}
+	}
+
 	// ob_start(ob_gzhandler);
 	$title = "Dashboard";
 	$acc_code = "INDEX";
