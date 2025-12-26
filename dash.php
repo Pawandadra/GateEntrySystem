@@ -58,6 +58,8 @@
   $quotes = json_decode($jsonfile, true);
   $onequote = $quotes[rand(0, count($quotes) - 1)];
 ?>
+
+<link rel="stylesheet" href="assets/css/mobile.css">
 <body style="background-color: #F1EADE;"> 
 <!-- MAIN CONTENT START -->
 <div class="content" style="min-height: calc(100vh - 90px);">
@@ -201,6 +203,27 @@
 						    echo "<span class='text-info'>You just Checked Out.<br> Wait for 10 Seconds to Check In.</span>";
 						    ?> </span> <?php
 						} else { ?> 
+							<div class="text-center mt-3">
+							    <button id="cameraBtn" class="btn btn-primary btn-lg" onclick="openCamera()">
+							      <i class="material-icons">camera_alt</i> Scan with Phone Camera
+							    </button>
+							  </div>
+							  <div id="cameraDiv" style="display: none;">
+							    <div id="scanner" style="width: 100%; height: 300px;"></div>
+							    <div id="scanStatus" class="text-center mt-2">
+							      <span class="badge badge-warning">Loading camera...</span>
+							    </div>
+							    <button onclick="stopCamera()" class="btn btn-danger mt-2">Stop Camera</button>
+							  </div>							  <div class="text-center mt-3">
+
+							  </div>
+							  <div id="cameraContainer" style="display: none;">
+							    <video id="cameraPreview" width="100%" height="300" autoplay></video>
+							    <canvas id="canvas" style="display: none;"></canvas>
+							    <div class="text-center mt-2">
+							      <button id="stopCamera" class="btn btn-danger">Stop Camera</button>
+							    </div>
+							  </div>
 							<div class="idle">
 								<div class="animated pulse infinite"> 
 							    <span class='text-info'>SCAN YOUR ID CARD</span>
@@ -276,18 +299,242 @@
 	  </div>              
 	</div>
 </div>
+
+<!--  editing started by Devansh Gupta-->
 <script src="assets/js/analogclock.js"></script>
-<script type="text/javascript">
-	$('span').one('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function() {
-	  	setTimeout(function(){
-			window.location.replace("/inout/dash.php");
-		}, 5200);
-	});
-	document.getElementById("usn").focus();
-	setTimeout(function(){
-		// window.location.replace("/inout/dash.php");
-	}, 9800);
+<script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+<script>
+let scanning = false;
+let codeReader = null;
+let currentStream = null;
+
+function openCamera() {
+    const cameraDiv = document.getElementById('cameraDiv');
+    cameraDiv.style.display = 'block';
+
+    document.getElementById('scanStatus').innerHTML =
+        '<span class="badge badge-warning">Starting camera...</span>';
+
+    startScanner();
+}
+
+function startScanner() {
+    const scannerDiv = document.getElementById('scanner');
+
+    // Clear previous content
+    scannerDiv.innerHTML = '';
+
+    // Create video element
+    const video = document.createElement('video');
+    video.id = 'barcodeVideo';
+    video.style.width = '100%';
+    video.style.height = '100%';
+    video.style.objectFit = 'cover';
+    scannerDiv.appendChild(video);
+
+    // Initialize scanner
+    codeReader = new ZXing.BrowserMultiFormatReader();
+
+    // Get available cameras
+    codeReader.listVideoInputDevices()
+        .then(videoInputDevices => {
+            let deviceId = null;
+
+            // Try to find back camera
+            for (const device of videoInputDevices) {
+                if (device.label.toLowerCase().includes('back') ||
+                    device.label.toLowerCase().includes('rear')) {
+                    deviceId = device.deviceId;
+                    break;
+                }
+            }
+
+            // If no back camera, use first available
+            if (!deviceId && videoInputDevices.length > 0) {
+                deviceId = videoInputDevices[0].deviceId;
+            }
+
+            document.getElementById('scanStatus').innerHTML =
+                '<span class="badge badge-success">Scanning... Point at barcode</span>' +
+                '<button onclick="toggleTorch()" class="btn btn-sm btn-outline-warning ml-2">' +
+                '🔦 Flash</button>';
+
+            // Start scanning
+            return codeReader.decodeFromVideoDevice(
+                deviceId,
+                'barcodeVideo',
+                (result, err) => {
+                    if (result) {
+                        handleScanResult(result.text);
+                    }
+                }
+            );
+        })
+        .then(() => {
+            scanning = true;
+
+            // Get the video stream for torch control
+            const video = document.getElementById('barcodeVideo');
+            if (video.srcObject) {
+                currentStream = video.srcObject;
+                optimizeForLowLight(video.srcObject);
+            }
+        })
+        .catch(err => {
+            console.error('Scanner error:', err);
+            document.getElementById('scanStatus').innerHTML =
+                '<span class="badge badge-danger">Error: ' + err.message + '</span>';
+        });
+}
+
+function optimizeForLowLight(stream) {
+    // Try to optimize camera for low light
+    if (stream && stream.getVideoTracks().length > 0) {
+        const videoTrack = stream.getVideoTracks()[0];
+
+        try {
+            // Apply constraints for better low-light performance
+            videoTrack.applyConstraints({
+                advanced: [
+                    { exposureMode: 'continuous' },
+                    { focusMode: 'continuous' },
+                    { whiteBalanceMode: 'continuous' },
+                    { brightness: { ideal: 0.7 } },
+                    { contrast: { ideal: 0.7 } }
+                ]
+            });
+        } catch (e) {
+            console.log("Could not optimize camera settings:", e);
+        }
+    }
+}
+
+function toggleTorch() {
+    if (!currentStream) return;
+
+    const videoTrack = currentStream.getVideoTracks()[0];
+    if (videoTrack && videoTrack.getCapabilities) {
+        const capabilities = videoTrack.getCapabilities();
+
+        if (capabilities.torch) {
+            const torchState = videoTrack.getSettings().torch || false;
+
+            videoTrack.applyConstraints({
+                advanced: [{ torch: !torchState }]
+            }).then(() => {
+                const btn = document.querySelector('#scanStatus .btn-outline-warning');
+                if (btn) {
+                    btn.innerHTML = !torchState ? '🔦 On' : '🔦 Flash';
+                    btn.className = !torchState ?
+                        'btn btn-sm btn-warning ml-2' :
+                        'btn btn-sm btn-outline-warning ml-2';
+                }
+            }).catch(err => {
+                console.log("Torch not supported:", err);
+            });
+        } else {
+            alert("Flashlight not supported on this device");
+        }
+    }
+}
+
+function handleScanResult(barcode) {
+    document.getElementById('usn').value = barcode;
+    stopCamera();
+    document.querySelector('form').submit();
+}
+
+function stopCamera() {
+    if (scanning && codeReader) {
+        codeReader.reset();
+        scanning = false;
+    }
+
+    // Stop video stream
+    if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+        currentStream = null;
+    }
+
+    document.getElementById('cameraDiv').style.display = 'none';
+}
+
+function checkForAutoRefresh() {
+    // Check if any status message is displayed
+    const statusMessages = [
+        'text-primary',    // msg 1: Checked in
+        'text-warning',    // msg 2: Wait to check out
+        'text-danger',     // msg 3: Invalid ID
+        'text-success',    // msg 4: Checked out
+        'text-info'        // msg 5: Wait to check in
+    ];
+
+    let hasStatusMessage = false;
+
+    statusMessages.forEach(className => {
+        if (document.querySelector(`.animated.flash span.${className}`)) {
+            hasStatusMessage = true;
+        }
+    });
+
+    // Also check for IN/OUT status
+    const hasStatusInOut = document.querySelector('.status-inout');
+
+    // If we have any status message, set up auto-refresh
+    if (hasStatusMessage || hasStatusInOut) {
+        // Wait for animation to complete, then refresh
+        setTimeout(function() {
+            if (!scanning) {
+                window.location.href = "/inout/dash.php";
+            }
+        }, 3000); // Refresh after 3 seconds for status messages
+    } else {
+        // No status message, use longer timeout for idle refresh
+        setTimeout(function() {
+            if (!scanning) {
+                //window.location.href = "/inout/dash.php";
+            }
+        }, 8000); // Refresh after 8 seconds when idle
+    }
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on input
+    document.getElementById("usn").focus();
+
+    // Set up animation end listeners for auto-refresh
+    const animatedElements = document.querySelectorAll('.animated');
+    animatedElements.forEach(el => {
+        el.addEventListener('animationend', function() {
+            // Check if this is a status animation
+            const isStatusElement = this.classList.contains('status-inout') ||
+                                   this.closest('.animated.flash') !== null ||
+                                   this.querySelector('span.text-primary, span.text-warning, span.text-danger, span.text-success, span.text-info');
+
+            if (isStatusElement && !scanning) {
+                setTimeout(function() {
+                    window.location.href = "/inout/dash.php";
+                }, 2000); 
+            }
+        }, { once: true });
+    });
+
+    // Fallback auto-refresh check
+    checkForAutoRefresh();
+
+    $(document).one('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function() {
+        setTimeout(function() {
+            if (!scanning) {
+                window.location.href = "/inout/dash.php";
+            }
+        }, 200);
+    });
+});
+
 </script>
+<!-- editing ended by Devansh Gupta -->
+
 <!-- MAIN CONTENT ENDS -->
 <?php
 	require_once "./template/footer.php";
