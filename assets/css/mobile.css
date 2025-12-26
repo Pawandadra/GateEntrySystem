@@ -1,10 +1,17 @@
-/* --- GLOBAL RESET TO PREVENT SCROLLING --- */
-/* File created by Devansh Gupta*/
+/* Mobile Responsive Styles */
 .content {
   height: 100vh !important;
   display: flex;
   flex-direction: column;
   padding: 1vh !important;
+}
+
+#cameraDiv:not([style*="display: none"])~.idle {
+  display: none !important;
+}
+
+#cameraDiv:not([style*="display: none"])~.idle+.stats-row {
+  display: none !important;
 }
 
 @media (max-width: 768px) {
@@ -78,14 +85,6 @@
   }
 }
 
-#cameraDiv:not([style*="display: none"])~.idle {
-  display: none !important;
-}
-
-#cameraDiv:not([style*="display: none"])~.idle+.stats-row {
-  display: none !important;
-}
-
 @media (max-width: 480px) {
   .col-md-5 {
     display: none !important;
@@ -102,10 +101,8 @@
     padding: 12px !important;
   }
 
-  @media (max-width: 480px) {
-    .card:not(.card-stats) {
-      display: none !important;
-    }
+  .card:not(.card-stats) {
+    display: none !important;
   }
 
   .col-md-3 {
@@ -137,10 +134,6 @@
     margin: 0 !important;
     padding: 0 !important;
     display: block !important;
-  }
-
-  #cameraDiv:not([style*="display: none"])~.idle {
-    display: none !important;
   }
 
   .card-stats {
@@ -181,7 +174,6 @@
     text-align: center !important;
   }
 
-  /* Make sure camera preview doesn't overlap */
   #cameraPreview {
     width: 100% !important;
     height: 250px !important;
@@ -218,9 +210,9 @@
   #cameraBtn {
     width: 90% !important;
     max-width: 300px !important;
-    padding: 14px 24px !important;
-    font-size: 16px !important;
-    margin: 10px auto !important;
+    padding: 5px 10px !important;
+    font-size: 12px !important;
+    margin: 2px auto !important;
     display: block !important;
     border-radius: 8px !important;
   }
@@ -241,23 +233,12 @@
     width: 70% !important;
   }
 
-  #cameraBtn {
-    padding: 5px 10px !important;
-    font-size: 12px !important;
-    margin: 2px auto !important;
-  }
-
   .idle span.text-info {
     font-size: 0.9rem !important;
     margin: 2px 0 !important;
     display: block;
   }
 
-
-
-
-
-  /* Style the card footer */
   .card-footer {
     display: flex !important;
     align-items: center;
@@ -266,9 +247,6 @@
     margin-top: auto !important;
   }
 
-
-
-  /* Grid Layout */
   .idle .row {
     display: flex !important;
     flex-wrap: wrap !important;
@@ -276,7 +254,6 @@
     justify-content: center !important;
     margin: 1px;
   }
-
 
   .h2 span {
     font-size: 0.9rem !important;

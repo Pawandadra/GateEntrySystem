@@ -4,64 +4,43 @@
 	$title = "Gate Register";
 	$acc_code = "U02";
 	if(!isset($_SESSION['id']) && empty($_SESSION['id'])) {
-   header("location:login.php");
+		header("location:login.php");
+		exit;
 	}
 	require "./functions/access.php";
 	require_once "./template/header.php";
 	require "functions/dbfunc.php";
 
-  $loc = $_SESSION['loc'];
+	$loc = $_SESSION['loc'];
+	$banner = ($_SESSION["banner"] == "true");
+	$activedash = $_SESSION["activedash"];
 
-  $new_arrivals = false;
-  $quote = false;
-  $clock = false;
-  $banner = false;
-
-  $banner = $_SESSION["banner"];
-  $activedash = $_SESSION["activedash"];
-
-  if($banner == "true"){
-  	$banner = true;
-  }elseif($banner == "false"){
-  	$banner = false;
-  }
-
-  if($activedash == 'clock'){
-  	$clock = true;
-  }elseif($activedash == 'quote'){
-  	$quote = true;
-  }elseif($activedash == 'newarrivals'){
-  	$new_arrivals = true;
-  }else{
-  	$new_arrivals = false;
-	  $quote = false;
-	  $clock = false;
-  }
+	$new_arrivals = ($activedash == 'newarrivals');
+	$quote = ($activedash == 'quote');
+	$clock = ($activedash == 'clock');
 
 	$data = checknews($conn, $loc);
 	if($data){
 		$news = true;
 		$new_arrivals = false;
-	  $quote = false;
-	  $clock = false;
-	  $banner = false;
+		$quote = false;
+		$clock = false;
+		$banner = false;
 	}else{
 		$news = false;
 	}
 
- $img_flag = true;
-	if(!$e_img){
-		$img_flag = false;
-	}
+	$img_flag = !empty($e_img);
 
-	$jsonfile = file_get_contents("assets/quotes.json");
-  $quotes = json_decode($jsonfile, true);
-  $onequote = $quotes[rand(0, count($quotes) - 1)];
+	if($quote){
+		$jsonfile = file_get_contents("assets/quotes.json");
+		$quotes = json_decode($jsonfile, true);
+		$onequote = $quotes[rand(0, count($quotes) - 1)];
+	}
 ?>
 
 <link rel="stylesheet" href="assets/css/mobile.css">
-<body style="background-color: #F1EADE;"> 
-<!-- MAIN CONTENT START -->
+<body style="background-color: #F1EADE;">
 <div class="content" style="min-height: calc(100vh - 90px);">
 	<div class="container-fluid">
 	  <div class="row">
@@ -76,13 +55,13 @@
 	        <?php if($news) { ?>
 	        	<div class="card-block">
 							<div class="card-title text-info h4 text-center">
-								 <?php echo "<br/>".$data['nhead']; ?> 
+								<br><?php echo $data['nhead']; ?> 
 							</div>		        
 							<div class="h4 text-center" style="text-align: justify !important;">
-								 <?php echo "<br/>".nl2br($data['nbody']); ?> 
+								<br><?php echo nl2br($data['nbody']); ?> 
 							</div>
 							<div class="h4 text-success text-center">
-						 		<?php echo "<br/>".$data['nfoot']; ?> 
+								<br><?php echo $data['nfoot']; ?> 
 							</div>
 						</div>
 					<?php } ?>
@@ -142,11 +121,13 @@
 	    </div>
 	    <div class="col-md-6 text-center" style="margin-top: 24px;">
 	    	<div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-          <h2 style="flex-grow: 1; text-align: center;">In Out Management System</h2>
+			<h2 style="flex-grow: 1; text-align: center;">Guru Nanak Dev Engineering College <br> Ludhiana</h2>
+		<?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] !== 'User') { ?>
           <a class="nav-link" href="functions/signout.php" style="display: flex; align-items: center; text-decoration: none;">
             <i class="material-icons">power_settings_new</i>
             <p class="d-lg-none d-md-block" style="margin: 0; padding-left: 5px;">Logout</p>
           </a>
+		<?php } ?>
         </div>
       <h3><?php echo $_SESSION['locname']; ?></h3>
       <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="GET">
@@ -170,9 +151,9 @@
 		    <div class="h1 t-shadow">
 					<?php
 						if ($d_status == "OUT") {
-						    echo "<span class='status-inout text-danger animated flash'>OUT</span>";
+							echo "<span class='status-inout text-danger animated flash'>OUT</span>";
 						} elseif ($d_status == "IN") {
-						    echo "<span class='status-inout text-success animated flash'>IN</span>";
+							echo "<span class='status-inout text-success animated flash'>IN</span>";
 						}
 					?>
 				</div>
@@ -180,50 +161,37 @@
 					<?php
 						if ($msg == "1") {
 							?> <span class="animated flash"> <?php 
-						    echo "<span class='text-primary'>Your ".$_SESSION['noname']." is: " . $usn . "<br>Entry time is: " . date('g:i A', strtotime($time))."</span>";
-						    ?> </span> <?php
+							echo "<span class='text-primary'>". $usn . "<br>Entry time is: " . date('g:i A', strtotime($time))."</span>";
+							?> </span> <?php
 						} elseif ($msg == "2") {
-						    # code...
-						    ?> <span class="animated flash"> <?php 
-						    echo "<span class='text-warning'>You just Checked In.<br> Wait for 10 Seconds to Check Out.</span>";
-						    ?> </span> <?php
+							?> <span class="animated flash"> <?php 
+							echo "<span class='text-warning'>You just Checked In.<br> Wait for 10 Seconds to Check Out.</span>";
+							?> </span> <?php
 						} elseif ($msg == "3") {
-						    # code...
-						    ?> <span class="animated flash"> <?php 
-						    echo "<span class='text-danger'>Invalid or Expired ".$_SESSION['noname']."<br> Contact Librarian for more details.</span>";
-						    ?> </span> <?php
+							?> <span class="animated flash"> <?php 
+							echo "<span class='text-danger'>Invalid or Expired ".$_SESSION['noname']."<br> Contact Librarian for more details.</span>";
+							?> </span> <?php
 						} elseif ($msg == "4") {
-						    # code...
-						    ?> <span class="animated flash"> <?php 
-						    echo "<span class='text-success'>Your Exit time is: " . date('g:i A', strtotime($time)) . "<br><span class='text-warning'>Total Time Duration : ".$otime[0]."</span>";
-						    ?> </span> <?php
+							?> <span class="animated flash"> <?php 
+							echo "<span class='text-success'>Your Exit time is: " . date('g:i A', strtotime($time)) . "<br><span class='text-warning'>Total Time Duration : ".$otime[0]."</span>";
+							?> </span> <?php
 						} elseif ($msg == "5") {
-						    # code...
-						    ?> <span class="animated flash"> <?php 
-						    echo "<span class='text-info'>You just Checked Out.<br> Wait for 10 Seconds to Check In.</span>";
-						    ?> </span> <?php
+							?> <span class="animated flash"> <?php 
+							echo "<span class='text-info'>You just Checked Out.<br> Wait for 10 Seconds to Check In.</span>";
+							?> </span> <?php
 						} else { ?> 
 							<div class="text-center mt-3">
-							    <button id="cameraBtn" class="btn btn-primary btn-lg" onclick="openCamera()">
-							      <i class="material-icons">camera_alt</i> Scan with Phone Camera
-							    </button>
-							  </div>
-							  <div id="cameraDiv" style="display: none;">
-							    <div id="scanner" style="width: 100%; height: 300px;"></div>
-							    <div id="scanStatus" class="text-center mt-2">
-							      <span class="badge badge-warning">Loading camera...</span>
-							    </div>
-							    <button onclick="stopCamera()" class="btn btn-danger mt-2">Stop Camera</button>
-							  </div>							  <div class="text-center mt-3">
-
-							  </div>
-							  <div id="cameraContainer" style="display: none;">
-							    <video id="cameraPreview" width="100%" height="300" autoplay></video>
-							    <canvas id="canvas" style="display: none;"></canvas>
-							    <div class="text-center mt-2">
-							      <button id="stopCamera" class="btn btn-danger">Stop Camera</button>
-							    </div>
-							  </div>
+								<button id="cameraBtn" class="btn btn-primary btn-lg" onclick="openCamera()">
+									<i class="material-icons">camera_alt</i> Scan with Phone Camera
+								</button>
+							</div>
+							<div id="cameraDiv" style="display: none;">
+								<div id="scanner" style="width: 100%; height: 300px;"></div>
+								<div id="scanStatus" class="text-center mt-2">
+									<span class="badge badge-warning">Loading camera...</span>
+								</div>
+								<button onclick="stopCamera()" class="btn btn-danger mt-2">Stop Camera</button>
+							</div>
 							<div class="idle">
 								<div class="animated pulse infinite"> 
 							    <span class='text-info'>SCAN YOUR ID CARD</span>
@@ -300,8 +268,9 @@
 	</div>
 </div>
 
-<!--  editing started by Devansh Gupta-->
+<?php if($clock): ?>
 <script src="assets/js/analogclock.js"></script>
+<?php endif; ?>
 <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
 <script>
 let scanning = false;
@@ -460,54 +429,27 @@ function stopCamera() {
 }
 
 function checkForAutoRefresh() {
-    // Check if any status message is displayed
-    const statusMessages = [
-        'text-primary',    // msg 1: Checked in
-        'text-warning',    // msg 2: Wait to check out
-        'text-danger',     // msg 3: Invalid ID
-        'text-success',    // msg 4: Checked out
-        'text-info'        // msg 5: Wait to check in
-    ];
-
-    let hasStatusMessage = false;
-
-    statusMessages.forEach(className => {
-        if (document.querySelector(`.animated.flash span.${className}`)) {
-            hasStatusMessage = true;
-        }
-    });
-
-    // Also check for IN/OUT status
+    const statusMessages = ['text-primary', 'text-warning', 'text-danger', 'text-success', 'text-info'];
+    let hasStatusMessage = statusMessages.some(className => 
+        document.querySelector(`.animated.flash span.${className}`)
+    );
     const hasStatusInOut = document.querySelector('.status-inout');
 
-    // If we have any status message, set up auto-refresh
     if (hasStatusMessage || hasStatusInOut) {
-        // Wait for animation to complete, then refresh
         setTimeout(function() {
             if (!scanning) {
                 window.location.href = "/inout/dash.php";
             }
-        }, 3000); // Refresh after 3 seconds for status messages
-    } else {
-        // No status message, use longer timeout for idle refresh
-        setTimeout(function() {
-            if (!scanning) {
-                //window.location.href = "/inout/dash.php";
-            }
-        }, 8000); // Refresh after 8 seconds when idle
+        }, 3000);
     }
 }
 
-// Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-focus on input
     document.getElementById("usn").focus();
 
-    // Set up animation end listeners for auto-refresh
     const animatedElements = document.querySelectorAll('.animated');
     animatedElements.forEach(el => {
         el.addEventListener('animationend', function() {
-            // Check if this is a status animation
             const isStatusElement = this.classList.contains('status-inout') ||
                                    this.closest('.animated.flash') !== null ||
                                    this.querySelector('span.text-primary, span.text-warning, span.text-danger, span.text-success, span.text-info');
@@ -520,22 +462,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }, { once: true });
     });
 
-    // Fallback auto-refresh check
     checkForAutoRefresh();
-
-    $(document).one('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function() {
-        setTimeout(function() {
-            if (!scanning) {
-                window.location.href = "/inout/dash.php";
-            }
-        }, 200);
-    });
 });
 
 </script>
-<!-- editing ended by Devansh Gupta -->
-
-<!-- MAIN CONTENT ENDS -->
 <?php
 	require_once "./template/footer.php";
-?>	
+?> 
