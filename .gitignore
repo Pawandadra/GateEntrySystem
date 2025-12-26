@@ -1,2 +1,5 @@
 .DS_Store
 blank.php
+functions/dbconn.php
+assets/img/banner.png
+assets/img/login.jpg
